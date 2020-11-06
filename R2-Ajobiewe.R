@@ -20,57 +20,35 @@ Species <- rep(species.name,each=4)
 Variables <- rep(quan.variables,3)
 d0 <- data.frame(Species, Variables)
 
-### 5.  Using data frame from exercise 4, make a data frame with the following variables:
-# Species,Variable, Mean,the mean for each variable and species.
+
+
+#Exercise 5.Using data frame from exercise 4, make a data frame with the following variables:
+# Species,Variable,the mean for each variable and species.
 # Standard error, the standard error for each variable and species.
+##Median, the median for each variable and species.
+##Minimum, the minimum for each variable and species.
+##Maximum, the maximum for each variable and species
+
+
+#First we have to create empty vectors then try to make them into a "for" loop
 
 Sp <- Spe <- Va <- character()
 Me <- Se <- numeric()
-
-for (i in levels(iris$Species)){
-  for (j in names(iris)[-5]){
-    x <-  iris[iris$Species == i, j]
-    Me <- c(Me, mean(x))
-    Se <- c(Se, sd(x) / sqrt(length(x)))
-  }
-}
-
-# Median, the median for each variable and species.
-
-Sp <- Spe <- Va <- character()
 Md <- numeric()
-
-for (i in levels(iris$Species)){
-for (j in names(iris)[-5]){
-  x <-  iris[iris$Species == i, j]
-  Md <- c(Md, median(x))
-}
-    
-}
-  
-# Minimum, the minimum for each variable and species.
-  
-Sp <- Spe <- Va <- character()
-Min <- numeric() 
-
-for (i in levels(iris$Species)){
-  for (j in names(iris)[-5]){
-    x <-  iris[iris$Species == i, j]
-    Min <- c(Min, min(x))
-  }
-}
-
-# Maximum, the maximum for each variable and species.
-
-Sp <- Spe <- Va <- character()
+Min <- numeric()
 Max <- numeric()
+
 for (i in levels(iris$Species)){
   for (j in names(iris)[-5]){
     x <-  iris[iris$Species == i, j]
-    Max <- c(Max, max(x))
-    
-  }
+    Me <- c(Me, mean(x))                     ##mean for each variable and species
+    Se <- c(Se, sd(x) / sqrt(length(x)))     ##standard error for each variable and species
+    Md <- c(Md, median(x))                   ##median for each variable and species.
+    Min <- c(Min, min(x))                    ##minimum for each variable and species.
+    Max <- c(Max, max(x))                    ##maximum for each variable and species
+     }                                         
 }
+
 
 ### To make every of the vectors created into a data frame 
    
