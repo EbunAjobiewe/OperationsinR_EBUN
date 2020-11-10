@@ -1,0 +1,50 @@
+---
+title: "Hypothesis Testing"
+author: "Ebunoluwa Ajobiewe"
+date: "11/10/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, fig.path = "results/.png")
+```
+
+**Exercises**
+
+Create a rmarkdown document with the answer to the following questions: 
+
+```{r}
+# Question 1. For the data InsectSpray, make a table for the number of insects for each spray with the mean, median and standard error. Note: Use knitr::kable(), or a similar function to print the table with its caption.
+
+str(InsectSprays)         #examine dataset to see its contents
+
+#create empty vectors then make them into a "for" loop
+
+Spray <- character()      #this is the number of sprays from the dataset
+Mean <- numeric()         
+Median <- numeric()
+Number_of_insect <- numeric()
+Standard_error <- numeric()
+
+for (i in levels(InsectSprays$spray)) {
+  Spray <- c(Spray, paste("Spray", i))
+  x <- InsectSprays$count[InsectSprays$spray == i ]
+  Number_of_insect <- c(Number_of_insect, sum(x))
+  Mean <- c(Mean, mean(x)) 
+  Median <- c(Median, median(x)) 
+  Standard_error <- c(Standard_error, sd(x) / sqrt(length(x)))     
+}
+
+#make the vectors created into a single data frame
+dIS <- data.frame(Spray, Mean, Median, Number_of_insect, Standard_error)
+
+#print a table with a caption
+knitr::kable(dIS, caption = "Table 1. The number of insects for each spray with the mean, median and standard error for the InsectSprays dataframe from base R.")
+
+```
+```{r}
+
+```
+
+
+
