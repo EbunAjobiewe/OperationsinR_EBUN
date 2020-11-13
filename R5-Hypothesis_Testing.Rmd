@@ -1,50 +1,80 @@
 ---
 title: "Hypothesis Testing"
 author: "Ebunoluwa Ajobiewe"
-date: "11/10/2020"
+date: "November 10, 2020"
 output: html_document
 ---
 
 ```{r setup, include=FALSE}
+#Change knitr options to save all the graphics in the folder “results” in png format with a resolution of 100 dpi.
 knitr::opts_chunk$set(echo = TRUE, fig.path = "results/.png")
+#install.packages("agricolae")
+#library(agricolae)
+#?TukeyHSD
 ```
 
 **Exercises**
 
-Create a rmarkdown document with the answer to the following questions: 
+Create a rmarkdown document with the answers to the following:
 
+Question 1; For the data InsectSpray, make a table for the number of insects for each spray with the mean, median and standard error. Note: Use knitr::kable(), or a similar function to print the table with its caption.
 ```{r}
-# Question 1. For the data InsectSpray, make a table for the number of insects for each spray with the mean, median and standard error. Note: Use knitr::kable(), or a similar function to print the table with its caption.
-
+data("InsectSprays")      #Call default dataset, "InsectSprays"
 str(InsectSprays)         #examine dataset to see its contents
 
 #create empty vectors then make them into a "for" loop
-
-Spray <- character()      #this is the number of sprays from the dataset
-Mean <- numeric()         
-Median <- numeric()
-Number_of_insect <- numeric()
-Standard_error <- numeric()
-
+Spray <- character()                            
+Mean <- Median <- Number_of_insect <- Standard_error <- numeric()         
 for (i in levels(InsectSprays$spray)) {
-  Spray <- c(Spray, paste("Spray", i))
+  Spray <- c(Spray, paste("Spray", i))               #Sprays
   x <- InsectSprays$count[InsectSprays$spray == i ]
-  Number_of_insect <- c(Number_of_insect, sum(x))
-  Mean <- c(Mean, mean(x)) 
-  Median <- c(Median, median(x)) 
-  Standard_error <- c(Standard_error, sd(x) / sqrt(length(x)))     
+  Number_of_insect <- c(Number_of_insect, sum(x))    #Number of Insects
+  Mean <- c(Mean, mean(x))                            #Mean  
+  Median <- c(Median, median(x))                      #Median
+  Standard_error <- c(Standard_error, sd(x) / sqrt(length(x)))  #Standard Error
 }
-
 #make the vectors created into a single data frame
 dIS <- data.frame(Spray, Mean, Median, Number_of_insect, Standard_error)
-
 #print a table with a caption
 knitr::kable(dIS, caption = "Table 1. The number of insects for each spray with the mean, median and standard error for the InsectSprays dataframe from base R.")
-
 ```
+
+Question 2; Print a plot to see the differences of counts between sprays. Include a caption explaining the figure. Which type of plot is the one you choose and why? 
+```{r InsectSprays, echo=TRUE, fig.cap=cap}
+cap <- "Figure 1:Differences of counts between sprays"
+plot(InsectSprays$count ~ InsectSprays$spray, xlab="Spray", ylab="Count")
+## Boxplot is used here because it allows addition of letters to determine if there are significant differences or not.
+```
+
+Question 3; Test for differences between sprays using anova and a posthoc comparison and redo the previous plot including the representation of all posthoc differences. Note: for the anova use the command aov() and for the posthoc comparison use the Tukey’s ‘Honest Significant Difference’ method. For this method try the TukeyHSD() and the agricolae::HSD.test() and see the differences.
 ```{r}
-
+#one- way anova
+aov(count ~ spray, data= InsectSprays)
+Annie <- aov(count ~ spray, data= InsectSprays)
+#print the summary of the anova
+summary.aov(Annie)
+#using posthoc comparison to see differences
+TukeyHSD(Annie)
+Honest <- TukeyHSD(Annie)
+Ag <- agricolae::HSD.test(Annie, "spray",group=TRUE,console=TRUE)
+#redoing previous plot with the representation of the posthoc differences and using colors to indicate different sprays 
+phoc <- boxplot(count~spray, data= InsectSprays, xlabel = "Spray", ylim= c(0,30),ylabel= "Insect count", col= c("Blue", "red", "yellow", "cyan", "purple", "green"))
+title(main = "Plot of posthoc differences")
+#assign letters to the plots to show groups
+text(x=1:6, y=27, c("a","a","b","b","b","a"))
 ```
 
+Question 4; Test for differences between sprays using non-parametric Kruskal-Wallis rank sum test. Again, redo the plot with these results.
+Note: Use agricolae::kruskal().
+```{r}
+#using Kruskal-wallis non-parametric test to see differences 
+KW <- agricolae::kruskal(InsectSprays$count, trt = InsectSprays$spray)
+kruskal.test(InsectSprays$count, InsectSprays$spray)
+#redoing the plot with KW results
+KP <- boxplot(count~spray, data= InsectSprays, xlabel = "Spray", ylim= c(0,30),ylabel= "Insect count", col= c("yellow", "cyan", "Blue", "red", "purple", "green"))
+title(main = "Plot of Kruskal differences")
+#assign letters to the plots to show groups
+#text(x=1:6, y=27
+```
 
 
