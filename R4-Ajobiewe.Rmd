@@ -1,0 +1,160 @@
+---
+title: "Hypothesis Testing"
+author: "Ebunoluwa Ajobiewe"
+date: "November 10, 2020"
+output: html_document
+---
+## R Markdown
+**Instructions**
+```{r setup, include=TRUE}
+#Change knitr options to save all the graphics in the folder “results” in png format with a resolution of 100dpi.
+knitr::opts_chunk$set(echo = TRUE, fig.path = "results", dev = "png", dpi = 100)
+#install.packages("agricolae")
+#library(agricolae)
+#?TukeyHSD
+```
+
+**Exercises**
+
+Create a rmarkdown document with the answers to the following:
+
+*Question 1:*
+For the data InsectSpray, make a table for the number of insects for each spray with the mean, median and standard error. Note: Use knitr::kable(), or a similar function to print the table with its caption.
+
+```{r}
+data("InsectSprays")      #Call default dataset, "InsectSprays"
+str(InsectSprays)         #examine dataset to see its contents
+
+#create empty vectors then make them into a "for" loop
+Spray <- character()                            
+Mean <- Median <- Number_of_insect <- Standard_error <- numeric()         
+for (i in levels(InsectSprays$spray)) {
+  Spray <- c(Spray, paste("Spray", i))               #Sprays
+  x <- InsectSprays$count[InsectSprays$spray == i ]
+  Number_of_insect <- c(Number_of_insect, sum(x))    #Number of Insects
+  Mean <- c(Mean, mean(x))                            #Mean  
+  Median <- c(Median, median(x))                      #Median
+  Standard_error <- c(Standard_error, sd(x) / sqrt(length(x)))  #Standard Error
+}
+```
+
+```{r}
+#make the vectors created into a single data frame
+dIS <- data.frame(Spray, Mean, Median, Number_of_insect, Standard_error)
+#print a table with a caption
+knitr::kable(dIS, caption = "*Table 1. Number of insects for each spray with the mean, median and standard error for the InsectSprays dataframe from base R*")
+```
+
+*Question 2:*
+(A)Print a plot to see the differences of counts between sprays. Include a caption explaining the figure. 
+(B)Which type of plot is the one you choose and why? 
+
+```{r, echo=TRUE, fig.cap=cap}
+#(A)
+plot(InsectSprays$count ~ InsectSprays$spray, xlab="Spray", ylab="Count")
+title(main = "Differences of Counts Between Sprays")
+cap <- "Figure 1:Showing differences of counts between sprays"
+#(B) Boxplot is used here because it shows the median, and allows addition of letters to determine if there are significant differences or not.
+```
+*Question 3:*
+Test for differences between sprays using anova and a posthoc comparison and redo the previous plot including the representation of all posthoc differences. Note: for the anova use the command aov() and for the posthoc comparison use the Tukey’s ‘Honest Significant Difference’ method. For this method try the TukeyHSD() and the agricolae::HSD.test() and see the differences.
+
+```{r}
+#one- way anova
+Annie <- aov(count ~ spray, data= InsectSprays)
+#print the summary of the anova
+summary.aov(Annie)
+#using posthoc comparison to see differences
+TukeyHSD(Annie)
+Honest <- TukeyHSD(Annie)
+Ag <- agricolae::HSD.test(Annie, "spray",group=TRUE,console=TRUE)
+```
+
+```{r, fig.cap=cap}
+#redoing previous plot with the representation of the posthoc differences and using colors to indicate different sprays 
+phoc <- boxplot(count~spray, data= InsectSprays, xlabel = "Spray", ylim= c(0,30),ylabel= "Insect count", col= c("Blue", "red", "yellow", "cyan", "purple", "green"))
+title(main = "Plot of Posthoc Differences")
+cap <- "*Figure 2: Showing the Posthoc Differences*"
+#assign letters to the plots to show groups
+text(x=1:6, y=27, c("a","a","b","b","b","a"))
+```
+
+*Question 4:*
+Test for differences between sprays using non-parametric Kruskal-Wallis rank sum test. Again, redo the plot with these results. Note: Use agricolae::kruskal().
+
+```{r, fig.cap=cap, echo=TRUE}
+#using Kruskal-wallis non-parametric test to see differences 
+KW <- agricolae::kruskal(InsectSprays$count, trt = InsectSprays$spray)
+kruskal.test(InsectSprays$count, InsectSprays$spray)
+#redoing the plot with KW results
+print(KW)
+KP <- boxplot(count~spray, data= InsectSprays, xlabel = "Spray", ylim= c(0,30),ylabel= "Insect count", col= c("yellow", "cyan", "Blue", "red", "purple", "green"))
+title(main = "Plot of Kruskal Differences")
+cap <- "Figure 3: Showing Kruskal Differences"
+#assign letters to the plots to show groups
+text(x=1:6, y=27, c("a","a","c","b","bc","a"))
+```
+*Question 5:*
+Transform count data using sqrt(counts) and redo the anova, the Tukey posthoc comparison and the plot.
+
+```{r}
+#transforming count data
+SR <- c(sqrt(InsectSprays$count))                         
+#redoing anova
+TransAnnie <- aov(sqrt(count)~spray, data = InsectSprays) 
+#redoing Tukey posthoc comparison
+TransHonest <- TukeyHSD(TransAnnie)       
+TransAg <- agricolae::HSD.test(TransAnnie,
+                               "spray",group=TRUE,console=TRUE)
+```
+
+```{r, fig.cap=cap}
+#plotting with the sqrt transformed data
+Transphoc <- plot(sqrt(InsectSprays$count)~InsectSprays$spray, ylim= c(0,7))
+#assign letters to show groups
+text(x=1:6, y=6, c("a","a","c","b","bc","a"))             
+title(main = "Plot of Square-root transfomed Data")
+cap <- "*Figure 4: Figure showing details of sqrt transformed data*"
+```
+*Question 6:*
+Test for normality of residuals for the two performed anova analyses of points 4 and 6 using shapiro.test() and use plot the anova to see the qqplots and compare them.
+
+*Useful Remark*
+
+The Shapiro-Wilk test is a way to tell if a sample comes from a normal distribution. If the p-value < 0.05 (alpha) then reject H0, (We conclude that it is not normally distributed) If p-value > 0.05, then we have demonstated that it is not a normal distribution.
+
+```{r, Shapiro test}
+#(a)Shapiro tests to check normality on both ANOVAS (Annie & TransAnnie)
+shapiro.test(Annie$residuals) #p-value: 0.02226 #Not normally distributed #We want p-value to be more than 0.05
+#Test of normality on transformed data
+shapiro.test(TransAnnie$residuals) #p-value: 0.6814 #Normally distributed #p-value is more than 0.05
+```
+
+```{r, fig.cap=cap}
+#(b)plotting the anova and checking qqplots to compare them
+#qqplot for Annie
+qqnorm(Annie$residuals, main = "Normal anova qqplot", xlab = "Theoretical Quartiles", ylab = "Sample Quartiles", plot.it = TRUE, datax = FALSE)
+cap <- "*Figure 5: Showing Normal anova qqplot*"
+qqline(Annie$residuals, datax = FALSE, distribution = qnorm, probs = c(0.25, 0.75), qtype = 7)
+```
+
+```{r}
+#qqplot for TransAnnnie (i.e sqrt transformed data)
+qqnorm(TransAnnie$residuals, main = "Square Roots transformed anova qqplot", xlab = "Theoretical Quartiles", ylab = "Sample Quartiles", plot.it = TRUE, datax = FALSE)
+cap <- "*Figure 6: Showing square roots transformed anova qqplot*"
+qqline(TransAnnie$residuals, datax = FALSE, distribution = qnorm, probs = c(0.25, 0.75), qtype = 7)
+```
+
+
+*Interpreting qqplots;* qqplots confirms  that distribution is actually better in the square root transformed than in the normal anova and it follows the results of the shapiro tests.
+
+*Question 7:*
+
+Which of the previous analysis is the adequate in this case? Why? Is there any difference in the results between the square root transformed ANOVA and the Kruskal-Wallis analyses? 
+Is there any difference in the results between the direct ANOVA and the square root transformed ANOVA? Which ones?
+
+1. In my opinion, the most adequate analysis is the Kruskal- Wallis, since there is no need to make a transformation of the data and it gives same results.In transforming data, it can get confusing and we can loose the meaning of data.
+
+2.There are no differences between the square root transformed ANOVA and the Kruskal-Wallis analysis , both gave the same classification.
+
+3. There are differences between the direct ANOVA and the square root transformed ANOVA . We can see more groups in the sqrt anova and also a mixed group.
